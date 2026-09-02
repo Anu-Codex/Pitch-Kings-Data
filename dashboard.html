@@ -281,7 +281,7 @@
     <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 10px;">
         Warning: This will permanently delete the tournament, all its fixtures, and the points table.
     </p>
-    <select id="dtTourSelect" style="border-color: var(--danger);">
+    <select id="deleteTourSelect" style="border-color: var(--danger);">
         <option value="">Select Tournament to Delete...</option>
     </select>
     <button onclick="deleteSpecificTour()" class="delete-btn" style="width: 100%; margin-top: 5px;">
@@ -552,7 +552,7 @@
             const tourOpts = tours.map(t => `<option value="${t._id}">${t.name}</option>`).join('');
             document.getElementById('sfTourSelect').innerHTML = '<option>Select Tour...</option>' + tourOpts;
             document.getElementById('srTourSelect').innerHTML = '<option>Select Tour...</option>' + tourOpts;
-            document.getElementById('dtTourSelect').innerHTML = '<option value="">Select Tour to Delete...</option>' + tourOpts;
+            document.getElementById('deleteTourSelect').innerHTML = '<option value="">Select Tour to Delete...</option>' + tourOpts;
             document.getElementById('subTourSelect').innerHTML = '<option>Select Tour...</option>' + tourOpts;
             document.getElementById('rebuildTourSelect').innerHTML = '<option>Select Tour...</option>' + tourOpts;
             
