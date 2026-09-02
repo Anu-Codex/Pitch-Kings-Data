@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS LEGENDS EFOOTBALL COMMUNITY</title>
+    <title>PITCH KINGS FC MOBILE COMMUNITY</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
@@ -1446,7 +1446,7 @@
     </div>
 </div>
             
-            <h1 class="league-title">NEXUS LEGENDS<br>Players Data</h1>
+            <h1 class="league-title">PITCH KINGS FC<br>Players Data</h1>
             <div class="league-leader">
     League leader <b id="leaderDisplay">Loading...</b>
             </div>
@@ -1494,7 +1494,7 @@
             </svg>
         </div>
         <div class="nl-text">
-            <span class="n-text">NEXUS</span><span class="l-text">LEGENDS</span>
+            <span class="n-text">PITCH</span><span class="l-text">KINGS FC</span>
         </div>
         <div class="nl-progress-mini">
             <div class="nl-bar"></div>
@@ -1529,7 +1529,7 @@
 
     </div>
     <script>
-    const API = "https://pes-park-backend.onrender.com";
+    const API = "https://pitch-kings-fc-backend.onrender.com";
     const API_V2 = "https://nexus-database-v2.onrender.com";
     let allPlayers = []; // Global store for players
         
@@ -1913,55 +1913,71 @@ async function switchTourTab(type) {
     content.innerHTML = '<p style="text-align:center; padding:30px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading Data...</p>';
 
     try {
-        if (category === 'table') {
-            const res = await fetch(`${API}/api/smart/standings/${tourId}`);
-            let data = await res.json();
+        // --- 1. POINTS TABLE (GROUPED) ---
+if (category === 'table') {
+    const res = await fetch(`${API}/api/smart/standings/${tourId}`);
+    let data = await res.json();
 
-            // 2. Data Check: If no data returned
-            if (!data || data.length === 0) {
-                content.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-dim);">Point table not initialized for this tour.</p>';
-                return;
-            }
-                // Sorting: Points > GD > GF
-            data.sort((a, b) => {
-                const gdA = (a.gf || 0) - (a.ga || 0);
-                const gdB = (b.gf || 0) - (b.ga || 0);
-                return (b.points - a.points) || (gdB - gdA) || (b.gf - a.gf);
-            });
+    if (!data || data.length === 0) {
+        content.innerHTML = '<p style="text-align:center; padding:20px;">No data initialized.</p>';
+        return;
+    }
 
-            const participantLabel = (type === 'auction') ? "OFFICIAL CLUB" : "PLAYER NAME";
+    // GROUPING LOGIC
+    const groups = {};
+    data.forEach(item => {
+        const gName = item.group || "League Standings"; // Fallback if no group assigned
+        if (!groups[gName]) groups[gName] = [];
+        groups[gName].push(item);
+    });
 
-    content.innerHTML = `
-    <div class="pts-table-wrapper">
-        <table class="pts-table" id="nexus-points-table">
-            <thead>
-                <tr>
-                    <th style="width:30px">#</th>
-                    <th class="col-team-name">${participantLabel}</th>
-                    <th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th>
-                </tr>
-            </thead>
-            <tbody>
-            ${data.map((s, i) => {
-                    const gd = (s.gf || 0) - (s.ga || 0);
-                    const gdColor = gd > 0 ? '#10b981' : (gd < 0 ? '#ef4444' : '#94a3b8');
-                    return `
-                    <tr class="${i === 0 ? 'row-leader' : ''}">
-                        <td style="color:var(--accent); font-weight:bold;">${i + 1}</td>
-                        <td class="col-team-name">${s.participant}</td>
-                        <td>${s.played || 0}</td>
-                        <td>${s.wins || 0}</td>
-                        <td>${s.draws || 0}</td>
-                        <td>${s.losses || 0}</td>
-                        <td>${s.gf || 0}</td>
-                        <td>${s.ga || 0}</td>
-                        <td style="font-weight:bold; color:${gdColor}">${gd > 0 ? '+' + gd : gd}</td>
-                        <td class="col-pts-bold">${s.points || 0}</td>
-                    </tr>`;
-                }).join('')}
-            </tbody>
-        </table>
-    </div>`;
+    let tableHtml = '';
+    for (const groupName in groups) {
+        const groupTeams = groups[groupName];
+        
+        // Sorting: Points > GD > GF
+        groupTeams.sort((a, b) => {
+            const gdA = (a.gf || 0) - (a.ga || 0);
+            const gdB = (b.gf || 0) - (b.ga || 0);
+            return (b.points - a.points) || (gdB - gdA) || (b.gf - a.gf);
+        });
+
+        tableHtml += `
+            <div style="margin-bottom: 30px;">
+                <div style="background:rgba(16, 185, 129, 0.1); color:var(--accent); padding:8px 15px; border-radius:10px; font-weight:900; font-size:0.75rem; margin-bottom:12px; display:inline-block; border:1px solid rgba(16, 185, 129, 0.3);">
+                    <i class="fa-solid fa-layer-group"></i> ${groupName.toUpperCase()}
+                </div>
+                <div class="pts-table-wrapper">
+                    <table class="pts-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30px">#</th>
+                                <th class="col-team-name">PARTICIPANT</th>
+                                <th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        ${groupTeams.map((s, i) => {
+                            const gd = (s.gf || 0) - (s.ga || 0);
+                            return `
+                            <tr class="${i === 0 ? 'row-leader' : ''}">
+                                <td style="color:var(--accent); font-weight:bold;">${i + 1}</td>
+                                <td class="col-team-name">${s.participant}</td>
+                                <td>${s.played || 0}</td>
+                                <td>${s.wins || 0}</td>
+                                <td>${s.draws || 0}</td>
+                                <td>${s.losses || 0}</td>
+                                <td style="font-weight:bold; color:${gd >= 0 ? '#10b981' : '#ef4444'}">${gd > 0 ? '+' + gd : gd}</td>
+                                <td class="col-pts-bold">${s.points || 0}</td>
+                            </tr>`;
+                        }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+    }
+    content.innerHTML = tableHtml;
+}
         // --- 2. FIXTURES ---
         } else if (category === 'fixtures') {
     const res = await fetch(`${API}/api/smart/fixtures/${tourId}`);
@@ -1986,6 +2002,7 @@ async function switchTourTab(type) {
         
             <div class="match-card-wrapper" style="margin-bottom:12px; border:1px solid var(--border); border-radius:15px; overflow:hidden; background:rgba(255,255,255,0.02);">
             <div style="background:rgba(16, 185, 129, 0.05); padding:6px 15px; font-size:0.65rem; color:var(--accent); font-weight:900; letter-spacing:2px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <span>${m.stage ? m.stage.toUpperCase() : 'MATCH'} ${m.group ? ' • ' + m.group.toUpperCase() : ''}</span>
                         <span>${m.stage ? m.stage.toUpperCase() : 'TOURNAMENT MATCH'}</span>
                         <i class="fa-solid fa-crosshairs" style="opacity:0.3;"></i>
                     </div>
