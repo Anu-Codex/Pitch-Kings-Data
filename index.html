@@ -1859,12 +1859,14 @@ async function renderAuctionTour(container) {
             <button onclick="downloadActiveTab()" class="btn-icon" style="border-color:var(--gold); color:var(--gold);" title="Download as Image">
         <i class="fa-solid fa-file-image"></i>
     </button>
-            <select id="tourTabSelector" style="background:var(--bg); color:white; border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:0.8rem;" onchange="switchTourTab('auction')">
-                <option value="table">Points table</option>
-                <option value="fixtures">Fixtures</option>
-                <option value="boot">Golden Boot</option>
-                <option value="knockouts">Knockouts</option>
-            </select>
+            <select id="tourTabSelector" style="..." onchange="switchTourTab('auction')">
+    <option value="table">Points table</option>
+    <option value="fixtures">Fixtures</option>
+    <option value="boot">Golden Boot</option>
+    <option value="gloves">Golden Gloves</option> 
+    <option value="captain">Best Captain (GD)</option> 
+    <option value="knockouts">Knockouts</option>
+</select>
         </div>
         <div id="tourContent"></div>
     `;
@@ -2033,56 +2035,81 @@ if (category === 'table') {
 // Simple Toggle Function (No API call needed now!)
 
      
-        // --- 3. GOLDEN BOOT ---
-        else if (category === 'boot') {
-            // Fetch goals from the new aggregator (Works for both Solo and Auction)
-            const res = await fetch(`${API}/api/smart/tour-goals/${tourId}`);
-            const data = await res.json();
+        // --- 3. RANKINGS (BOOT, GLOVES, CAPTAIN) ---
+else if (category === 'boot' || category === 'gloves' || category === 'captain') {
+    const res = await fetch(`${API}/api/smart/tour-stats/${tourId}`);
+    const data = await res.json();
 
-            if (!data || data.length === 0) {
-                content.innerHTML = '<p style="text-align:center; padding:40px; color:var(--text-dim);">No goals recorded in Member Matches yet.</p>';
-                return;
-            }
+    if (!data || data.length === 0) {
+        content.innerHTML = '<p style="text-align:center; padding:40px;">No match stats recorded yet.</p>';
+        return;
+    }
 
-            content.innerHTML = `
-<div class="table-responsive">
-    <table class="ranking-table">
-        <thead>
-            <tr>
-                <th class="col-rank">#</th>
-                <th class="col-player" style="text-align:left;">PLAYER</th>
-                <th class="col-team" style="text-align:left;">TEAM</th>
-                <th class="col-goals">GOALS</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${data.map((p, i) => `
-                <tr onclick="window.location.href='player.html?id=${p._id}'" style="cursor:pointer">
-                    <td class="col-rank" style="color:${i === 0 ? 'var(--gold)' : '#475569'}">
-                        ${i + 1}
-                    </td>
-                    <td class="col-player">
-                        <div class="player-flex">
-                            <img src="${p.image || 'https://via.placeholder.com/35'}" 
-                                 class="boot-avatar" 
-                                 onerror="this.src='https://via.placeholder.com/35'">
-                            <span class="boot-p-name">${p.name}</span>
-                        </div>
-                    </td>
-                    <td class="col-team">
-                        <div class="team-flex">
-                            <img src="${p.logo}" class="boot-t-logo" onerror="this.style.display='none'">
-                            <span class="boot-t-name">${p.team}</span>
-                        </div>
-                    </td>
-                    <td class="col-goals">
-                        <span class="boot-goals-val">${p.goals}</span>
-                    </td>
-                </tr>`).join('')}
-        </tbody>
-    </table>
-</div>`;
-        }
+    // Sort based on category
+    let label = "GOALS";
+    let valKey = "gf";
+    let subLabel = "Conceded";
+    let subKey = "ga";
+
+    if (category === 'boot') {
+        data.sort((a, b) => b.gf - a.gf || a.ga - b.ga);
+        label = "GOALS"; valKey = "gf";
+    } else if (category === 'gloves') {
+        data.sort((a, b) => a.ga - b.ga || b.gf - a.gf);
+        label = "CONCEDED"; valKey = "ga";
+        subLabel = "Scored"; subKey = "gf";
+    } else if (category === 'captain') {
+        data.sort((a, b) => b.gd - a.gd || b.gf - a.gf);
+        label = "GD IMPACT"; valKey = "gd";
+        subLabel = "GF/GA"; 
+    }
+
+    content.innerHTML = `
+    <div class="table-responsive">
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th class="col-rank">#</th>
+                    <th class="col-player" style="text-align:left;">PLAYER</th>
+                    <th class="col-team" style="text-align:left;">TEAM</th>
+                    <th class="col-goals">${label}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map((p, i) => {
+                    let displayVal = p[valKey];
+                    if(category === 'captain') displayVal = (p.gd > 0 ? '+'+p.gd : p.gd);
+                    
+                    return `
+                    <tr onclick="window.location.href='player.html?id=${p._id}'" style="cursor:pointer">
+                        <td class="col-rank" style="color:${i === 0 ? 'var(--gold)' : '#475569'}">
+                            ${i + 1}
+                        </td>
+                        <td class="col-player">
+                            <div class="player-flex">
+                                <img src="${p.image}" class="boot-avatar" onerror="this.src='https://via.placeholder.com/35'">
+                                <div>
+                                    <span class="boot-p-name">${p.name}</span>
+                                    <div style="font-size:0.6rem; color:var(--text-dim)">${p.matches} Matches Played</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="col-team">
+                            <div class="team-flex">
+                                <img src="${p.logo}" class="boot-t-logo">
+                                <span class="boot-t-name">${p.team}</span>
+                            </div>
+                        </td>
+                        <td class="col-goals">
+                            <span class="boot-goals-val" style="color:${category === 'gloves' ? '#ef4444' : 'var(--accent)'}">${displayVal}</span>
+                            <div style="font-size:0.55rem; opacity:0.6">${category === 'captain' ? p.gf+'F / '+p.ga+'A' : subLabel+': '+p[subKey]}</div>
+                        </td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    </div>`;
+}
         // --- 4. KNOCKOUTS (FIXED) ---
         else if (category === 'knockouts') {
             const res = await fetch(`${API}/api/smart/fixtures/${tourId}`);
