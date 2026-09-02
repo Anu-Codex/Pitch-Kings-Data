@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - NEXUS LEGENDS</title>
+    <title>Admin Dashboard - PITCH KINGS FC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root {
@@ -232,14 +232,29 @@
 </div>
 
             <div class="sub-box">
-                <h4>2. Add Match</h4>
-                <select id="sfTourSelect" onchange="loadTourParticipants()"><option>Loading...</option></select>
-                <div class="grid-2">
-                    <select id="sfPlayerA"></select>
-                    <select id="sfPlayerB"></select>
-                    <input type="text" id="sfStage" placeholder="Stage (e.g. Final / R16)">
-                </div>
-                <button onclick="createSmartFixture()" class="btn-gold">Generate Fixture</button>
+    <h4>2. Add Match</h4>
+    <select id="sfTourSelect" onchange="loadTourParticipants()"><option>Loading...</option></select>
+    
+    <!-- ADD THIS GRID FOR STAGE AND GROUP -->
+    <div class="grid-2">
+        <input type="text" id="sfStage" placeholder="Stage (e.g. Round 1)">
+        <select id="sfGroup">
+            <option value="">No Group (Single League)</option>
+            <option value="Group A">Group A</option>
+            <option value="Group B">Group B</option>
+            <option value="Group C">Group C</option>
+            <option value="Group C">Group D</option>
+            <option value="Group C">Group E</option>
+            <option value="Group C">Group F</option>
+            
+        </select>
+    </div>
+
+    <div class="grid-2">
+        <select id="sfPlayerA"></select>
+        <select id="sfPlayerB"></select>
+    </div>
+    <button onclick="createSmartFixture()" class="btn-gold">Generate Fixture</button>
             </div>
 
             <div class="sub-box">
@@ -474,46 +489,12 @@
     </button>
             </div>
         </div>
-        <div id="sec-calendar" class="admin-section">
-    <div class="sub-box">
-        <h4>Add Event to Calendar</h4>
-        <input type="text" id="evTitle" placeholder="Event Title">
-        <input type="date" id="evDate">
-        <select id="evType">
-            <option value="league">Team League (Gold)</option>
-            <option value="weekly">Weekly (Blue)</option>
-            <option value="ucl">UCL (Purple)</option>
-            <option value="playoff">Playoff (Orange)</option>
-            <option value="auction">Auction (Green)</option>
-        </select>
-        <button onclick="saveEvent()" class="btn-green">Post to Calendar</button>
-    </div>
-        </div>
-        <div id="sec-media" class="admin-section">
-    <div class="sub-box">
-        <h4><i class="fa-solid fa-video"></i> Add Video to Showcase</h4>
-        <input type="text" id="vTitle" placeholder="Video Title (e.g. S7 Grand Final)">
-        <input type="text" id="vUrl" placeholder="Full YouTube Link (https://youtube.com/watch?v=...)">
-        <select id="vCat">
-            <option value="Tournament">Tournament Replay</option>
-            <option value="Highlights">Player Highlights</option>
-            <option value="Tutorial">Tactical Tutorial</option>
-        </select>
-        <button onclick="addMedia()" class="btn-green">Publish to Media Hub</button>
-    </div>
-
-    <div class="sub-box">
-        <h4>Manage Videos</h4>
-        <div id="adminVideoList" class="list-container"></div>
-    </div>
-        </div>
        
-
     </div>
 
     <script>
-    const API = "https://pes-park-backend.onrender.com";
-    const API_V2 = "https://nexus-database-v2.onrender.com";
+    const API = "https://pitch-kings-fc-backend.onrender.com";
+    const API_V2 = "";
 
     // Security Check
     if (localStorage.getItem('isAdmin') !== 'true') { window.location.href = 'login.html'; }
@@ -712,12 +693,11 @@ if (updateForm) {
         tourId: document.getElementById('sfTourSelect').value,
         playerA: document.getElementById('sfPlayerA').value,
         playerB: document.getElementById('sfPlayerB').value,
-        // NEW: Grabs the stage (Final, R16, etc.) from the input
         stage: document.getElementById('sfStage').value || "League", 
+        group: document.getElementById('sfGroup').value, // NEW: Capture group
         isSubFixture: false 
     };
 
-    // Safety check: Don't send empty data
     if (!data.tourId || !data.playerA || !data.playerB) {
         alert("❌ Error: Select Tournament and BOTH participants!");
         return;
@@ -731,14 +711,12 @@ if (updateForm) {
         });
 
         if (res.ok) {
-            alert(`✅ Fixture [${data.stage}] Added Successfully!`);
-            document.getElementById('sfStage').value = ""; // Clear stage input
+            alert(`✅ Fixture Added to ${data.group || 'League'}!`);
         }
     } catch (e) {
-        alert("❌ Link Error: Server Unreachable");
+        alert("❌ Link Error");
     }
     }
-
     async function loadTourFixtures() {
     const tourId = document.getElementById('srTourSelect').value;
     const container = document.getElementById('srFixtureList');
