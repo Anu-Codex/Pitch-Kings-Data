@@ -1977,7 +1977,6 @@ if (category === 'table') {
             </div>`;
     }
     content.innerHTML = tableHtml;
-}
         // --- 2. FIXTURES ---
         } else if (category === 'fixtures') {
     const res = await fetch(`${API}/api/smart/fixtures/${tourId}`);
@@ -2131,7 +2130,7 @@ if (category === 'table') {
         console.error(e);
         content.innerHTML = '<p style="text-align:center; color:red; padding:20px;">CRITICAL: DATABASE LINK FAILED</p>';
     }
-}
+        }
         function renderSoloTour(container) {
     container.innerHTML = `
         <div class="solo-tour-card">
