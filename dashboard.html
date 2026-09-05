@@ -308,6 +308,27 @@
     </div>
     <button onclick="createSubFixture()" class="btn-green">Generate Member Match</button>
             </div>
+            <div class="sub-box" style="border-left: 4px solid #a855f7; background: rgba(168, 85, 247, 0.05);">
+    <h4><i class="fa-solid fa-microchip"></i> Smart Fixture Engine</h4>
+    <p style="font-size:0.7rem; color:var(--text-dim); margin-bottom:12px;">
+        Automatically creates pairings. If groups exist, it pairs within groups. If not, it generates a full league.
+    </p>
+    
+    <label style="font-size:0.6rem; color:var(--text-dim)">1. SELECT TOURNAMENT</label>
+    <select id="autoTourSelectV2">
+        <option value="">Choose Tournament...</option>
+    </select>
+
+    <label style="font-size:0.6rem; color:var(--text-dim)">2. FORMAT TYPE</label>
+    <select id="autoLegs">
+        <option value="1">Single Leg (1 Match Each)</option>
+        <option value="2">Double Leg (Home & Away)</option>
+    </select>
+    
+    <button onclick="runAutoEngine()" class="btn-green" style="background:#a855f7; color:white;">
+        <i class="fa-solid fa-bolt"></i> Generate All Fixtures
+    </button>
+            </div>
         </div>
 
         <!-- 5. PRESTIGE (SMART HOF) -->
@@ -567,6 +588,7 @@
             document.getElementById('deleteTourSelect').innerHTML = '<option value="">Select Tour to Delete...</option>' + tourOpts;
             document.getElementById('subTourSelect').innerHTML = '<option>Select Tour...</option>' + tourOpts;
             document.getElementById('rebuildTourSelect').innerHTML = '<option>Select Tour...</option>' + tourOpts;
+            document.getElementById('autoTourSelectV2').innerHTML = tourOpts;
             
             const duoOpts = duoTours.map(t => `<option value="${t._id}">${t.name} (DUO)</option>`).join('');
             document.getElementById('dtTourSelect').innerHTML = '<option value="">Select Duo Tour...</option>' + duoOpts;
@@ -1531,6 +1553,43 @@ async function createDuoFixture() {
     if(res.ok) {
         alert("Duo Score Updated! ✅");
         loadDuoFixtures();
+    }
+        }
+        async function runAutoEngine() {
+    const tourId = document.getElementById('autoTourSelectV2').value;
+    const legs = document.getElementById('autoLegs').value;
+
+    if (!tourId) return alert("Please select a tournament.");
+
+    const confirmMsg = legs == 2 
+        ? "Generate DOUBLE LEG fixtures? (Every pair plays twice)" 
+        : "Generate SINGLE LEG fixtures?";
+    
+    if (!confirm(confirmMsg)) return;
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-cog fa-spin"></i> GENERATING...`;
+
+    try {
+        const res = await fetch(`${API}/api/smart/auto-generate-fixtures-v2`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tourId, legs })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert(data.message);
+            location.reload(); // Refresh to see fixtures in the Record Result list
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (e) {
+        alert("Connection to Engine Lost.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate All Fixtures`;
     }
         }
 
